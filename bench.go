@@ -14,7 +14,7 @@ type NCollection struct {
 	Results []testing.BenchmarkResult
 }
 
-func (c NCollection) ToStringSlice() []string {
+func (c *NCollection) ToStringSlice() []string {
 	result := []string{
 		strconv.Itoa(c.N),
 	}
@@ -48,13 +48,13 @@ func (bm *Benchem) Run(n int) testing.BenchmarkResult {
 
 type BenchCollection struct {
 	Benches []*Benchem
-	Results []NCollection
+	Results []*NCollection
 }
 
 func NewBenchCollection() *BenchCollection {
 	return &BenchCollection {
 		Benches: []*Benchem{},
-		Results: []NCollection{},
+		Results: []*NCollection{},
 	}
 }
 
@@ -64,25 +64,30 @@ func (c *BenchCollection) AddFunc(name string, f BenchFunc) {
 
 func (c *BenchCollection) Run(start, end, step int) {
 
-	c.Results = []NCollection{}
+	c.Results = []*NCollection{}
 
 	for iterations := start; iterations <= end; iterations += step {
 
-		collection := NCollection{
+		collection := &NCollection{
 			N: iterations,
 			Results: []testing.BenchmarkResult{},
 		}
+		c.Results = append(c.Results, collection)
 
-		for _, bench := range c.Benches {
-			collection.Results = append(collection.Results, bench.Run(iterations))
+	}
+
+	for _, bench := range c.Benches {
+		for _, collection := range c.Results {
+			collection.Results = append(collection.Results, bench.Run(collection.N))
 
 			runtime.GC()
+
+			log.Printf("Completed run for %d iterations", collection.N)
 		}
 
-		log.Printf("Completed run for %d iterations", iterations)
-
-		c.Results = append(c.Results, collection)
+		log.Printf("Completed bench: %s", bench.Name)
 	}
+
 }
 
 func (c *BenchCollection) BenchNames() []string {
