@@ -1,4 +1,4 @@
-package main
+package benchen
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"io"
 	"log"
-	"runtime"
 )
 
 type NCollection struct {
@@ -62,32 +61,45 @@ func (c *BenchCollection) AddFunc(name string, f BenchFunc) {
 	c.Benches = append(c.Benches, NewBenchem(name, f))
 }
 
-func (c *BenchCollection) Run(start, end, step int) {
+func (c *BenchCollection) RunStep(start, end, step int) {
+	iterations := []int{}
 
+	for i := start; i <= end; i += step {
+		iterations = append(iterations, i)
+	}
+
+	c.Run(iterations)
+
+}
+
+func (c *BenchCollection) Run(iterations []int) {
 	c.Results = []*NCollection{}
 
-	for iterations := start; iterations <= end; iterations += step {
+	for _, iteration := range iterations {
 
 		collection := &NCollection{
-			N: iterations,
+			N: iteration,
 			Results: []testing.BenchmarkResult{},
 		}
 		c.Results = append(c.Results, collection)
 
 	}
 
+	c.run()
+}
+
+func (c *BenchCollection) run() {
+
 	for _, bench := range c.Benches {
 		for _, collection := range c.Results {
-			collection.Results = append(collection.Results, bench.Run(collection.N))
 
-			runtime.GC()
+			collection.Results = append(collection.Results, bench.Run(collection.N))
 
 			log.Printf("Completed run for %d iterations", collection.N)
 		}
 
 		log.Printf("Completed bench: %s", bench.Name)
 	}
-
 }
 
 func (c *BenchCollection) BenchNames() []string {

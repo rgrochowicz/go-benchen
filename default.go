@@ -1,4 +1,4 @@
-package main
+package benchen
 
 import (
 	"io"
@@ -10,8 +10,8 @@ func AddFunc(name string, f BenchFunc) {
 	DefaultBenchCollection.AddFunc(name, f)
 }
 
-func Run(start, end, step int) {
-	DefaultBenchCollection.Run(start, end, step)
+func RunStep(start, end, step int) {
+	DefaultBenchCollection.RunStep(start, end, step)
 }
 
 func Save(w io.Writer) {
